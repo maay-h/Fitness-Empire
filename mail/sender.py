@@ -137,7 +137,7 @@ def _send_email(to_email, subject, html_body):
         return False, "SendGrid not configured. Set SENDGRID_API_KEY environment variable."
 
     message = Mail(
-        from_email=Email('noreply@fitnessempiremysuru.in'),
+        from_email=Email(os.environ.get('FROM_EMAIL', 'noreply@fitnessempiremysuru.in')),
         to_emails=To(to_email),
         subject=subject,
         html_content=HtmlContent(html_body)
