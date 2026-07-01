@@ -117,5 +117,11 @@ def init_db():
         "FROM members m LEFT JOIN payments p ON m.id = p.member_id "
         "WHERE p.id IS NULL AND m.amount_paid > 0"
     )
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT
+        )
+    ''')
     conn.commit()
     conn.close()

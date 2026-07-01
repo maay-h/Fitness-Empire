@@ -1,4 +1,3 @@
-import json
 import os
 import re
 from dotenv import load_dotenv
@@ -20,7 +19,7 @@ app.secret_key = os.environ.get('SECRET_KEY', 'fitness-empire-secret-key-2024')
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000
 
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.json')
+
 
 def normalize_phone(phone):
     if not phone:
@@ -34,19 +33,23 @@ def normalize_phone(phone):
 
 def load_admin_password_hash():
     try:
-        with open(CONFIG_PATH, 'r') as f:
-            cfg = json.load(f)
-        return cfg.get('admin_password_hash', '')
+        conn = get_db()
+        row = conn.execute("SELECT value FROM settings WHERE key='admin_password_hash'").fetchone()
+        conn.close()
+        return row['value'] if row else ''
     except:
         return ''
 
 def save_admin_password_hash(hash):
     try:
-        with open(CONFIG_PATH, 'r') as f:
-            cfg = json.load(f)
-        cfg['admin_password_hash'] = hash
-        with open(CONFIG_PATH, 'w') as f:
-            json.dump(cfg, f, indent=4)
+        conn = get_db()
+        conn.execute(
+            "INSERT INTO settings (key, value) VALUES ('admin_password_hash', %s) "
+            "ON CONFLICT (key) DO UPDATE SET value=%s",
+            (hash, hash)
+        )
+        conn.commit()
+        conn.close()
         return True
     except:
         return False
