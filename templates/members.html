@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="top-bar">
+    <h1>All Members</h1>
+    <div style="display:flex; gap:10px; align-items:center;">
+        <a href="{{ url_for('add_member') }}" class="btn btn-primary"><span class="material-symbols-outlined">add</span> Add New Member</a>
+    </div>
+</div>
+
+<div class="actions-bar">
+    <div class="search-box">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input type="text" id="searchInput" placeholder="Search by name, phone, bill number..." value="{{ search_query or '' }}">
+    </div>
+    <div class="filter-group">
+        <select id="statusFilter" class="form-control" onchange="applyFilters()">
+            <option value="">All Status</option>
+            <option value="active" {{ 'selected' if selected_status == 'active' else '' }}>Active</option>
+            <option value="expiring" {{ 'selected' if selected_status == 'expiring' else '' }}>Expiring (7 days)</option>
+            <option value="expired" {{ 'selected' if selected_status == 'expired' else '' }}>Expired</option>
+        </select>
+        <select id="planFilter" class="form-control" onchange="applyFilters()">
+            <option value="">All Plans</option>
+            <option value="1 Month" {{ 'selected' if selected_plan == '1 Month' else '' }}>1 Month</option>
+            <option value="3 Months" {{ 'selected' if selected_plan == '3 Months' else '' }}>3 Months</option>
+            <option value="6 Months" {{ 'selected' if selected_plan == '6 Months' else '' }}>6 Months</option>
+            <option value="1 Year" {{ 'selected' if selected_plan == '1 Year' else '' }}>1 Year</option>
+        </select>
+    </div>
+</div>
+
+<div class="table-container">
+    <div class="table-header">
+        <h3>Gym Members ({{ members|length }})</h3>
+        {% if selected_status or selected_plan %}
+        <a href="{{ url_for('members') }}" class="btn btn-sm btn-outline"><span class="material-symbols-outlined">close</span> Clear Filters</a>
+        {% endif %}
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Plan</th>
+                <th>End Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if members %}
+                {% for m in members %}
+                <tr>
+                    <td>#{{ m['id'] }}</td>
+                    <td><a href="{{ url_for('member_detail', member_id=m['id']) }}" class="link-primary">{{ m['name'] }}</a></td>
+                    <td>{{ m['phone'] | phone_format }}</td>
+                    <td>{{ m['email'] or '-' }}</td>
+                    <td>{{ m['plan'] }}</td>
+                    <td>{{ m['expiry_date'] | date_format }}</td>
+                    <td>
+                        {% set days_left = m['expiry_date'] | days_remaining %}
+                        {% if m['status'] == 'active' and days_left <= 7 and days_left > 0 %}
+                            <span class="status-badge status-expiring"><span class="material-symbols-outlined">schedule</span> {{ days_left }} days left</span>
+                        {% elif m['status'] == 'active' %}
+                            <span class="status-badge status-active"><span class="material-symbols-outlined">check_circle</span> Active</span>
+                        {% else %}
+                            <span class="status-badge status-expired"><span class="material-symbols-outlined">cancel</span> Expired</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <a href="{{ url_for('member_detail', member_id=m['id']) }}" class="btn btn-sm btn-outline"><span class="material-symbols-outlined">visibility</span></a>
+                            <a href="{{ url_for('edit_member', member_id=m['id']) }}" class="btn btn-sm btn-outline"><span class="material-symbols-outlined">edit</span></a>
+                            <a href="{{ url_for('renew_member', member_id=m['id']) }}" class="btn btn-sm btn-outline"><span class="material-symbols-outlined">refresh</span></a>
+                            <form method="POST" action="{{ url_for('delete_member', member_id=m['id']) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-outline delete-btn"><span class="material-symbols-outlined">delete</span></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <span class="material-symbols-outlined" style="font-size: 2rem; margin-bottom: 10px; color: var(--text-muted);">groups</span>
+                        <div>No members found. <a href="{{ url_for('add_member') }}" class="link-primary">Add your first member</a></div>
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function applyFilters() {
+    const status = document.getElementById('statusFilter').value;
+    const plan = document.getElementById('planFilter').value;
+    const search = document.getElementById('searchInput').value.trim();
+    const params = new URLSearchParams();
+    if (search) params.set('q', search);
+    if (status) params.set('status', status);
+    if (plan) params.set('plan', plan);
+    const qs = params.toString();
+    window.location.href = '{{ url_for("members") }}' + (qs ? '?' + qs : '');
+}
+document.getElementById('searchInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') applyFilters();
+});
+</script>
+{% endblock %}

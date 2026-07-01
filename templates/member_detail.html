@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="top-bar">
+    <h1>{{ member['name'] }}</h1>
+    <div>
+        <a href="{{ url_for('edit_member', member_id=member['id']) }}" class="btn btn-secondary"><span class="material-symbols-outlined">edit</span> Edit</a>
+        {% if member['status'] == 'active' %}
+        <a href="{{ url_for('renew_member', member_id=member['id']) }}" class="btn btn-warning"><span class="material-symbols-outlined">refresh</span> Renew</a>
+        {% endif %}
+        <a href="{{ url_for('members') }}" class="btn btn-secondary"><span class="material-symbols-outlined">arrow_back</span> All Members</a>
+    </div>
+</div>
+
+{% set days_left = member['expiry_date'] | days_remaining %}
+{% if member['status'] == 'active' and days_left <= 7 and days_left > 0 %}
+<div class="alert alert-info">
+    <span class="material-symbols-outlined">schedule</span> This member's membership expires in <strong>{{ days_left }} day(s)</strong> ({{ member['expiry_date'] | date_format }})
+</div>
+{% elif member['status'] == 'active' and days_left == 0 %}
+<div class="alert alert-warning">
+    <span class="material-symbols-outlined">event_busy</span> This member's membership <strong>expires today</strong> ({{ member['expiry_date'] | date_format }})
+</div>
+{% endif %}
+
+{% if member['balance_amount'] and member['balance_amount'] > 0 %}
+<div class="alert alert-warning">
+    <span class="material-symbols-outlined">payments</span> Balance amount of <strong>₹{{ member['balance_amount'] }}</strong> is pending. Due date: {{ member['balance_due_date'] | date_format }}
+</div>
+{% endif %}
+
+<div class="detail-grid">
+    <div class="detail-item">
+        <div class="label"><span class="material-symbols-outlined">tag</span> Member ID</div>
+        <div class="value">#{{ member['id'] }}</div>
+    </div>
+    <div class="detail-item">
+        <div class="label"><span class="material-symbols-outlined">person</span> Full Name</div>
+        <div class="value">{{ member['name'] }}</div>
+    </div>
+    <div class="detail-item">
+        <div class="label"><span class="material-symbols-outlined">receipt</span> Bill Number</div>
+        <div class="value">{{ member['bill_number'] or 'Not provided' }}</div>
+    </div>
+    <div class="detail-item">
+        <div class="label"><span class="material-symbols-outlined">mail</span> Email</div>
+        <div class="value">{{ member['email'] or 'Not provided' }}</div>
+    </div>
+    <div class="detail-item">
+        <div class="label"><span class="material-symbols-outlined">phone</span> Phone Number</div>
+        <div class="value">{{ member['phone'] | phone_format or 'Not provided' }}</div>
+    </div>
+    <div class="detail-item">
+        <div class="label"><span class="material-symbols-outlined">calendar_today</span> Joining Date</div>
+        <div class="value">{{ member['joining_date'] | date_format if member['joining_date'] else 'Not provided' }}</div>
+    </div>
+    <div class="detail-item">
+        <div class="label"><span class="material-symbols-outlined">event_busy</span> Membership Expiry</div>
+        <div class="value">{{ member['expiry_date'] | date_format if member['expiry_date'] else 'Not provided' }}</div>
+    </div>
+    <div class="detail-item">
+        <div class="label"><span class="material-symbols-outlined">fitness_center</span> Trainer</div>
+        <div class="value">{{ member['trainer'] or 'Not assigned' }}</div>
+    </div>
+    <div class="detail-item">
+        <div class="label"><span class="material-symbols-outlined">sell</span> Plan</div>
+        <div class="value">{{ member['plan'] }}</div>
+    </div>
+    <div class="detail-item">
+        <div class="label"><span class="material-symbols-outlined">circle</span> Status</div>
+        <div class="value">
+            {% if member['status'] == 'active' and days_left <= 7 and days_left == 0 %}
+                <span class="status-badge status-active"><span class="material-symbols-outlined">check_circle</span> Active (expires today)</span>
+            {% elif member['status'] == 'active' and days_left <= 7 and days_left > 0 %}
+                <span class="status-badge status-expiring"><span class="material-symbols-outlined">schedule</span> Expiring ({{ days_left }} days)</span>
+            {% elif member['status'] == 'active' %}
+                <span class="status-badge status-active"><span class="material-symbols-outlined">check_circle</span> Active</span>
+            {% else %}
+                <span class="status-badge status-expired"><span class="material-symbols-outlined">cancel</span> Expired</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="detail-item">
+        <div class="label"><span class="material-symbols-outlined">currency_rupee</span> Price</div>
+        <div class="value">₹{{ member['price'] or 0 }}</div>
+    </div>
+    <div class="detail-item">
+        <div class="label"><span class="material-symbols-outlined">account_balance_wallet</span> Amount Paid</div>
+        <div class="value" style="color: var(--success);">₹{{ member['amount_paid'] or 0 }}</div>
+    </div>
+    <div class="detail-item">
+        <div class="label"><span class="material-symbols-outlined">payments</span> Payment Mode</div>
+        <div class="value">{{ member['payment_mode'] or 'Cash' }}</div>
+    </div>
+    <div class="detail-item">
+        <div class="label"><span class="material-symbols-outlined">calendar_month</span> Paid Date</div>
+        <div class="value">{{ member['paid_date'] | date_format if member['paid_date'] else 'Not recorded' }}</div>
+    </div>
+    {% if member['balance_amount'] and member['balance_amount'] > 0 %}
+    <div class="detail-item">
+        <div class="label"><span class="material-symbols-outlined">hourglass_bottom</span> Balance Amount</div>
+        <div class="value" style="color: var(--danger);">₹{{ member['balance_amount'] }}</div>
+    </div>
+    <div class="detail-item">
+        <div class="label"><span class="material-symbols-outlined">calendar_month</span> Balance Due Date</div>
+        <div class="value" style="color: var(--warning);">{{ member['balance_due_date'] | date_format }}</div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card" style="margin-top: 30px;">
+    <div class="card-header">
+        <h3><span class="material-symbols-outlined">note</span> Notes</h3>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('update_notes', member_id=member['id']) }}">
+            <textarea name="notes" class="form-control" rows="4" style="width:100%; resize:vertical;">{{ member['notes'] or '' }}</textarea>
+            <div style="margin-top: 10px;">
+                <button type="submit" class="btn btn-primary"><span class="material-symbols-outlined">save</span> Save Note</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if payments %}
+<div class="table-container" style="margin-top: 30px;">
+    <div class="table-header">
+        <h3><span class="material-symbols-outlined" style="vertical-align: middle;">payments</span> Payment History</h3>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Payment Mode</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in payments %}
+            <tr>
+                <td>{{ p['payment_date'] | date_format }}</td>
+                <td>₹{{ p['amount'] }}</td>
+                <td>{{ p['payment_mode'] }}</td>
+                <td>{{ p['notes'] or '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if history %}
+<div class="table-container" style="margin-top: 30px;">
+    <div class="table-header">
+        <h3><span class="material-symbols-outlined" style="vertical-align: middle;">history</span> Membership History</h3>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Plan</th>
+                <th>Start Date</th>
+                <th>Expiry Date</th>
+                <th>Price</th>
+                <th>Amount Paid</th>
+                <th>Balance</th>
+                <th>Renewed On</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for h in history %}
+            <tr>
+                <td>{{ h['plan'] }}</td>
+                <td>{{ h['start_date'] | date_format }}</td>
+                <td>{{ h['expiry_date'] | date_format }}</td>
+                <td>₹{{ h['price'] or 0 }}</td>
+                <td>₹{{ h['amount_paid'] or 0 }}</td>
+                <td>{% if h['balance_amount'] and h['balance_amount'] > 0 %}₹{{ h['balance_amount'] }}{% else %}-{% endif %}</td>
+                <td>{{ h['renewed_at'] | date_format }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div style="margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap;">
+    <button onclick="sendWA('{{ url_for("send_welcome", member_id=member['id']) }}')" class="btn btn-success"><span class="material-symbols-outlined">chat</span> Welcome via WhatsApp</button>
+    <form method="POST" action="{{ url_for('send_welcome_email_route', member_id=member['id']) }}">
+        <button type="submit" class="btn btn-success"><span class="material-symbols-outlined">mail</span> Welcome via Email</button>
+    </form>
+    {% if member['status'] == 'active' %}
+    <button onclick="sendWA('{{ url_for("send_reminder", member_id=member['id']) }}')" class="btn btn-warning"><span class="material-symbols-outlined">chat</span> Reminder via WhatsApp</button>
+    <form method="POST" action="{{ url_for('send_reminder_email_route', member_id=member['id']) }}">
+        <button type="submit" class="btn btn-warning"><span class="material-symbols-outlined">mail</span> Reminder via Email</button>
+    </form>
+    {% endif %}
+    {% if member['balance_amount'] and member['balance_amount'] > 0 %}
+    <button onclick="sendWA('{{ url_for('send_balance_reminder_route', member_id=member['id']) }}')" class="btn" style="background:#2563eb;color:#fff;"><span class="material-symbols-outlined">chat</span> Balance Reminder via WhatsApp</button>
+    <form method="POST" action="{{ url_for('send_balance_reminder_email_route', member_id=member['id']) }}">
+        <button type="submit" class="btn" style="background:#2563eb;color:#fff;"><span class="material-symbols-outlined">mail</span> Balance Reminder via Email</button>
+    </form>
+    {% endif %}
+    <form method="POST" action="{{ url_for('delete_member', member_id=member['id']) }}" onsubmit="return confirm('Are you sure you want to delete this member?');" style="margin-left: auto;">
+        <button type="submit" class="btn btn-danger"><span class="material-symbols-outlined">delete</span> Delete Member</button>
+    </form>
+</div>
+<script>
+function sendWA(url) {
+    fetch(url, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.url) window.open(data.url, '_blank');
+            else alert('Error: ' + (data.error || 'Unknown error'));
+        })
+        .catch(err => alert('Error: ' + err));
+}
+</script>
+{% endblock %}

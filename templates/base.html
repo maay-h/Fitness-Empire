@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Empire - Gym Management</title>
+    <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif:wght@500;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='images/Fitness Empire.ico') }}">
+</head>
+<body>
+    <div class="wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <img src="{{ url_for('static', filename='images/FELogo.jpeg') }}" alt="Fitness Empire">
+                <small>Gym Management System</small>
+            </div>
+            <ul class="sidebar-nav">
+                <li><a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' else '' }}">
+                    <span class="icon"><span class="material-symbols-outlined">dashboard</span></span> Dashboard
+                </a></li>
+                <li><a href="{{ url_for('members') }}" class="{{ 'active' if request.endpoint == 'members' else '' }}">
+                    <span class="icon"><span class="material-symbols-outlined">groups</span></span> All Members
+                </a></li>
+                <li><a href="{{ url_for('add_member') }}" class="{{ 'active' if request.endpoint == 'add_member' else '' }}">
+                    <span class="icon"><span class="material-symbols-outlined">person_add</span></span> Add Member
+                </a></li>
+                <li><a href="{{ url_for('expiring_members') }}" class="{{ 'active' if request.endpoint == 'expiring_members' else '' }}">
+                    <span class="icon"><span class="material-symbols-outlined">schedule</span></span> Expiring Soon
+                </a></li>
+                <li><a href="{{ url_for('expired_members') }}" class="{{ 'active' if request.endpoint == 'expired_members' else '' }}">
+                    <span class="icon"><span class="material-symbols-outlined">event_busy</span></span> Expired
+                </a></li>
+                <li><a href="{{ url_for('balance_list') }}" class="{{ 'active' if request.endpoint == 'balance_list' else '' }}">
+                    <span class="icon"><span class="material-symbols-outlined">payments</span></span> Pending Balances
+                </a></li>
+                <li><a href="{{ url_for('admin') }}" class="{{ 'active' if request.endpoint == 'admin' else '' }}">
+                    <span class="icon"><span class="material-symbols-outlined">admin_panel_settings</span></span> Admin
+                </a></li>
+                <li><a href="{{ url_for('settings') }}" class="{{ 'active' if request.endpoint == 'settings' else '' }}">
+                    <span class="icon"><span class="material-symbols-outlined">settings</span></span> Settings
+                </a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="theme-toggle">
+                    <span class="toggle-label">
+                        <span class="material-symbols-outlined" id="themeIcon">light_mode</span>
+                    </span>
+                    <label class="switch">
+                        <input type="checkbox" id="themeToggle" style="display: none;">
+                    </label>
+                </div>
+            </div>
+        </aside>
+        <main class="main-content">
+            <div class="flash-messages">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                <span class="material-symbols-outlined">
+                                    {% if category == 'success' %}check_circle
+                                    {% elif category == 'danger' %}error
+                                    {% elif category == 'warning' %}warning
+                                    {% else %}info{% endif %}
+                                </span>
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

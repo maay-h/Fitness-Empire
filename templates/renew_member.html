@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="top-bar">
+    <h1>Renew Membership</h1>
+    <div>
+        <span style="color: var(--text-secondary); margin-right: 15px; font-size: 0.9rem;">
+            <span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">person</span> Member: <strong style="color: var(--text-primary); vertical-align: middle;">{{ member['name'] }}</strong>
+        </span>
+        <a href="{{ url_for('member_detail', member_id=member['id']) }}" class="btn btn-secondary"><span class="material-symbols-outlined">arrow_back</span> Back</a>
+    </div>
+</div>
+
+<div class="form-container">
+    <form method="POST" action="{{ url_for('renew_member', member_id=member['id']) }}">
+        <div class="form-row">
+            <div class="form-group">
+                <label><span class="material-symbols-outlined">sell</span> New Plan *</label>
+                <select id="plan" name="plan" class="form-control" required>
+                    <option value="">-- Select Plan --</option>
+                    <option value="1 Month">1 Month</option>
+                    <option value="3 Months">3 Months</option>
+                    <option value="6 Months">6 Months</option>
+                    <option value="1 Year">1 Year</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label><span class="material-symbols-outlined">calendar_today</span> New Start Date *</label>
+                <input type="date" id="start_date" name="start_date" class="form-control" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label><span class="material-symbols-outlined">event_busy</span> New Expiry Date *</label>
+                <input type="date" id="expiry_date" name="expiry_date" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label><span class="material-symbols-outlined">currency_rupee</span> Plan Price</label>
+                <input type="number" id="price" name="price" class="form-control" placeholder="Total price" min="0" step="0.01">
+            </div>
+        </div>
+        <div class="form-group">
+            <label><span class="material-symbols-outlined">account_balance_wallet</span> Amount Paid</label>
+            <input type="number" id="amount_paid" name="amount_paid" class="form-control" placeholder="Amount paid now" min="0" step="0.01">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label><span class="material-symbols-outlined">payments</span> Payment Mode</label>
+                <select name="payment_mode" class="form-control">
+                    <option value="Cash">Cash</option>
+                    <option value="Online">Online</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label><span class="material-symbols-outlined">calendar_month</span> Amount Paid Date</label>
+                <input type="date" name="paid_date" class="form-control">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Balance Payment Required?</label>
+            <div class="form-row" style="grid-template-columns: auto auto; gap: 30px;">
+                <div class="form-check">
+                    <input type="radio" id="balance_no" name="has_balance" value="no" checked>
+                    <label for="balance_no">No, fully paid</label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" id="balance_yes" name="has_balance" value="yes">
+                    <label for="balance_yes">Yes, balance remaining</label>
+                </div>
+            </div>
+        </div>
+        <div class="balance-fields">
+            <div class="form-row">
+                <div class="form-group">
+                    <label><span class="material-symbols-outlined">payments</span> Balance Amount *</label>
+                    <input type="number" id="balance_amount" name="balance_amount" class="form-control" placeholder="Enter balance amount" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label><span class="material-symbols-outlined">calendar_month</span> Last Date to Pay *</label>
+                    <input type="date" id="balance_due_date" name="balance_due_date" class="form-control">
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 25px;">
+            <button type="submit" class="btn btn-success" style="flex: 1; justify-content: center; padding: 12px;"><span class="material-symbols-outlined">refresh</span> Renew Membership</button>
+            <a href="{{ url_for('member_detail', member_id=member['id']) }}" class="btn btn-secondary" style="padding: 12px 24px;"><span class="material-symbols-outlined">close</span> Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="top-bar">
+    <h1>Dashboard</h1>
+    <span class="date-display" id="current-date"></span>
+</div>
+
+<div class="cards-grid">
+    <div class="card">
+        <div class="card-icon"><span class="material-symbols-outlined">groups</span></div>
+        <div class="card-value">{{ total }}</div>
+        <div class="card-label">Total Members</div>
+    </div>
+    <div class="card card-green">
+        <div class="card-icon"><span class="material-symbols-outlined">check_circle</span></div>
+        <div class="card-value">{{ active }}</div>
+        <div class="card-label">Active Members</div>
+    </div>
+    <div class="card card-yellow">
+        <div class="card-icon"><span class="material-symbols-outlined">schedule</span></div>
+        <div class="card-value">{{ expiring_soon }}</div>
+        <div class="card-label">Expiring in 7 Days</div>
+    </div>
+    <div class="card">
+        <div class="card-icon"><span class="material-symbols-outlined">event_busy</span></div>
+        <div class="card-value">{{ expired }}</div>
+        <div class="card-label">Expired Members</div>
+    </div>
+    <div class="card card-yellow">
+        <div class="card-icon"><span class="material-symbols-outlined">payments</span></div>
+        <div class="card-value">{{ pending_balances }}</div>
+        <div class="card-label">Pending Balances</div>
+    </div>
+</div>
+
+<div class="actions-bar">
+    <a href="{{ url_for('add_member') }}" class="btn btn-primary"><span class="material-symbols-outlined">add</span> Add New Member</a>
+    <a href="{{ url_for('balance_list') }}" class="btn btn-warning"><span class="material-symbols-outlined">payments</span> View Pending Balances</a>
+    <a href="{{ url_for('expiring_members') }}" class="btn btn-secondary"><span class="material-symbols-outlined">schedule</span> View Expiring Members</a>
+    <a href="{{ url_for('expired_members') }}" class="btn btn-secondary"><span class="material-symbols-outlined">event_busy</span> View Expired Members</a>
+</div>
+
+<div class="alert alert-info" style="margin-top: 30px;">
+    <span class="material-symbols-outlined">chat</span>
+    <span><strong>WhatsApp Ready:</strong> Keep <strong>web.whatsapp.com</strong> open in your browser to send messages.</span>
+</div>
+
+{% endblock %}

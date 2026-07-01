@@ -1,0 +1,14 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.db
+build/
+dist/
+*.exe
+*.rar
+*.spec
+*.vbs
+config.json
+PyWhatKit_DB.txt
+Copy of *.csv

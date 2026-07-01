@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="top-bar">
+    <h1>Admin Panel</h1>
+</div>
+
+{% if not admin_verified %}
+<div id="adminLogin" class="card" style="max-width:400px; margin:40px auto;">
+    <div class="card-header">
+        <h3>Admin Access</h3>
+    </div>
+    <div class="card-body">
+        <p style="margin-bottom:16px; color:var(--text-secondary);">Enter admin password to continue.</p>
+        <input type="password" id="adminPassword" class="form-control" placeholder="Enter admin password" autocomplete="off" style="width:100%;" onkeydown="if(event.key==='Enter')verifyAdmin()">
+        <div id="adminError" style="color:var(--danger); margin-top:8px; display:none;"></div>
+        <div style="margin-top:16px;">
+            <button onclick="verifyAdmin()" class="btn btn-primary" style="width:100%; justify-content:center;">Verify</button>
+        </div>
+    </div>
+</div>
+{% else %}
+
+{% if monthly_data %}
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border-color);">
+        <h3 style="margin:0;"><span class="material-symbols-outlined">calendar_month</span> Monthly Revenue - {{ year }}</h3>
+        <div style="display:flex;gap:8px;">
+            <a href="?year={{ year-1 }}" class="btn btn-sm btn-outline"><span class="material-symbols-outlined">chevron_left</span></a>
+            <a href="?year={{ year+1 }}" class="btn btn-sm btn-outline"><span class="material-symbols-outlined">chevron_right</span></a>
+        </div>
+    </div>
+    <div style="padding:16px 20px;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Month</th>
+                    <th>New Members</th>
+                    <th>Revenue (amount paid)</th>
+                    <th style="text-align:right;">% of Year</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in monthly_data %}
+                <tr>
+                    <td><strong>{{ m.month_name }}</strong></td>
+                    <td>{{ m.count }}</td>
+                    <td>₹{{ '%.2f'|format(m.total) }}</td>
+                    <td style="text-align:right;">
+                        {% if grand_total > 0 %}{{ '%.1f'|format(m.total / grand_total * 100) }}%{% else %}0%{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr style="font-weight:bold; background:var(--bg-secondary);">
+                    <td>Total</td>
+                    <td>{{ monthly_data|sum(attribute='count') }}</td>
+                    <td>₹{{ '%.2f'|format(grand_total) }}</td>
+                    <td style="text-align:right;">100%</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<div class="cards-grid" style="margin-bottom:20px;">
+    <div class="card" id="currentMonthCard">
+        <div class="card-icon"><span class="material-symbols-outlined">payments</span></div>
+        <div class="card-value" id="currentMonthSales">₹0</div>
+        <div class="card-label" id="currentMonthLabel">Current Month Sales</div>
+    </div>
+</div>
+
+<div class="actions-bar">
+    <div class="form-group" style="margin-bottom:0;">
+        <label style="text-transform:none; font-size:0.9rem;">Select Month</label>
+        <input type="month" id="salesMonth" class="form-control" style="width:220px;" onchange="loadSalesData()">
+    </div>
+    <div style="display:flex; gap:10px;">
+        <a href="#" onclick="downloadSalesPDF()" class="btn btn-outline"><span class="material-symbols-outlined">download</span> Download Annual Report</a>
+        <a href="{{ url_for('download_members_pdf') }}" class="btn btn-outline"><span class="material-symbols-outlined">groups</span> Download Members PDF</a>
+    </div>
+</div>
+
+<div class="table-container">
+    <div class="table-header">
+        <h3><span class="material-symbols-outlined">receipt_long</span> Sales Details</h3>
+        <span id="salesCount" style="color:var(--text-secondary); font-size:0.9rem;"></span>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Plan</th>
+                <th>Amount Paid</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody id="salesTableBody">
+            <tr><td colspan="5" style="text-align:center; padding:40px; color:var(--text-secondary);">Select a month to view sales data.</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const now = new Date();
+    const monthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    const el = document.getElementById('salesMonth');
+    if (el) {
+        el.value = monthStr;
+        loadSalesData();
+    }
+});
+
+function verifyAdmin() {
+    const pwd = document.getElementById('adminPassword').value;
+    fetch('{{ url_for("verify_admin") }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'password=' + encodeURIComponent(pwd)
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            const err = document.getElementById('adminError');
+            err.textContent = data.error || 'Incorrect password';
+            err.style.display = 'block';
+        }
+    }).catch(err => {
+        document.getElementById('adminError').textContent = 'Error: ' + err;
+        document.getElementById('adminError').style.display = 'block';
+    });
+}
+
+function loadSalesData() {
+    const month = document.getElementById('salesMonth').value;
+    if (!month) return;
+    const [year, mon] = month.split('-');
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    document.getElementById('currentMonthLabel').textContent = monthNames[parseInt(mon)-1] + ' ' + year;
+    fetch('{{ url_for("admin_sales_data") }}?month=' + month)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('currentMonthSales').textContent = '₹' + parseFloat(data.total_paid).toFixed(2);
+            document.getElementById('salesCount').textContent = data.count + ' record(s)';
+            const tbody = document.getElementById('salesTableBody');
+            tbody.innerHTML = '';
+            if (data.members && data.members.length > 0) {
+                data.members.forEach(function(m) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = '<td>#' + m.id + '</td><td><a href="/member/' + m.id + '" class="link-primary">' + m.name + '</a></td><td>' + (m.plan || '-') + '</td><td>₹' + parseFloat(m.amount_paid).toFixed(2) + '</td><td>' + (m.joining_date || '-') + '</td>';
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--text-secondary);">No sales data for this month.</td></tr>';
+            }
+        });
+}
+
+function downloadSalesPDF() {
+    const month = document.getElementById('salesMonth').value;
+    if (!month) { alert('Select a month first.'); return; }
+    const year = month.split('-')[0];
+    window.open('{{ url_for("download_sales_pdf") }}?year=' + year, '_blank');
+}
+</script>
+{% endif %}
+
+<style>
+.card-header h3 { margin:0; font-size:16px; display:flex; align-items:center; gap:8px; }
+.card-body { padding:20px; }
+#adminLogin .card-header { padding:18px 20px; border-bottom:1px solid var(--border-color); }
+</style>
+
+<script>
+function verifyAdmin() {
+    const pwd = document.getElementById('adminPassword').value;
+    fetch('{{ url_for("verify_admin") }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'password=' + encodeURIComponent(pwd)
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            const err = document.getElementById('adminError');
+            err.textContent = data.error || 'Incorrect password';
+            err.style.display = 'block';
+        }
+    }).catch(err => {
+        document.getElementById('adminError').textContent = 'Error: ' + err;
+        document.getElementById('adminError').style.display = 'block';
+    });
+}
+</script>
+{% endblock %}

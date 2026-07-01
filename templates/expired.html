@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="top-bar">
+    <h1><span class="material-symbols-outlined" style="vertical-align: middle;">event_busy</span> Expired Members</h1>
+    <a href="{{ url_for('members') }}" class="btn btn-secondary"><span class="material-symbols-outlined">arrow_back</span> All Members</a>
+</div>
+
+<div class="actions-bar">
+    <div class="search-box">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input type="text" id="searchInput" placeholder="Search by name, phone...">
+    </div>
+</div>
+
+<div class="table-container">
+    <div class="table-header">
+        <h3><span class="material-symbols-outlined" style="color: var(--danger); vertical-align: middle;">cancel</span> Expired members ({{ members|length }})</h3>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Plan</th>
+                <th>Expiry Date</th>
+                <th>Days Since Expiry</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if members %}
+                {% for m in members %}
+                {% set days_since = m['expiry_date'] | days_remaining | abs %}
+                <tr>
+                    <td>#{{ m['id'] }}</td>
+                    <td><a href="{{ url_for('member_detail', member_id=m['id']) }}" class="link-primary">{{ m['name'] }}</a></td>
+                    <td>{{ m['phone'] }}</td>
+                    <td>{{ m['plan'] }}</td>
+                    <td>{{ m['expiry_date'] | date_format }}</td>
+                    <td><span style="color: var(--danger);">{{ days_since }} day(s) ago</span></td>
+                    <td><span class="status-badge status-expired"><span class="material-symbols-outlined">cancel</span> Expired</span></td>
+                    <td>
+                        <div class="actions">
+                            <a href="{{ url_for('member_detail', member_id=m['id']) }}" class="btn btn-sm btn-outline"><span class="material-symbols-outlined">visibility</span></a>
+                            <a href="{{ url_for('renew_member', member_id=m['id']) }}" class="btn btn-sm btn-outline"><span class="material-symbols-outlined">refresh</span></a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <span class="material-symbols-outlined" style="font-size: 2rem; margin-bottom: 10px; color: var(--success);">check_circle</span>
+                        <div>No expired members. All memberships are active!</div>
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

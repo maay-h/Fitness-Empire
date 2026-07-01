@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="top-bar">
+    <h1><span class="material-symbols-outlined" style="vertical-align: middle;">schedule</span> Members Expiring Soon</h1>
+    <div>
+        <form method="POST" action="{{ url_for('send_all_email_reminders') }}" style="display: inline;">
+            <button type="submit" class="btn btn-warning"><span class="material-symbols-outlined">mail</span> Remind All via Email</button>
+        </form>
+        <a href="{{ url_for('members') }}" class="btn btn-secondary"><span class="material-symbols-outlined">arrow_back</span> All Members</a>
+    </div>
+</div>
+
+<div class="actions-bar">
+    <div class="search-box">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input type="text" id="searchInput" placeholder="Search by name, phone...">
+    </div>
+</div>
+
+<div class="table-container">
+    <div class="table-header">
+        <h3><span class="material-symbols-outlined" style="color: var(--warning); vertical-align: middle;">warning</span> Members expiring within 7 days ({{ members|length }})</h3>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Plan</th>
+                <th>Expiry Date</th>
+                <th>Days Left</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if members %}
+                {% for m in members %}
+                {% set days_left = m['expiry_date'] | days_remaining %}
+                <tr>
+                    <td>#{{ m['id'] }}</td>
+                    <td><a href="{{ url_for('member_detail', member_id=m['id']) }}" class="link-primary">{{ m['name'] }}</a></td>
+                    <td>{{ m['phone'] }}</td>
+                    <td>{{ m['plan'] }}</td>
+                    <td>{{ m['expiry_date'] | date_format }}</td>
+                    <td>
+                        {% if days_left > 0 %}
+                            <strong>{{ days_left }} day(s)</strong>
+                        {% elif days_left == 0 %}
+                            <strong style="color: var(--danger);"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">warning</span> Expiring Today!</strong>
+                        {% else %}
+                            <strong style="color: var(--danger);"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">cancel</span> Expired</strong>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if days_left > 0 %}
+                            <span class="status-badge status-expiring"><span class="material-symbols-outlined">schedule</span> {{ days_left }} days left</span>
+                        {% elif days_left == 0 %}
+                            <span class="status-badge status-active"><span class="material-symbols-outlined">check_circle</span> Expires Today</span>
+                        {% else %}
+                            <span class="status-badge status-expired"><span class="material-symbols-outlined">cancel</span> Expired</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <a href="{{ url_for('member_detail', member_id=m['id']) }}" class="btn btn-sm btn-outline"><span class="material-symbols-outlined">visibility</span></a>
+                            <a href="{{ url_for('renew_member', member_id=m['id']) }}" class="btn btn-sm btn-outline"><span class="material-symbols-outlined">refresh</span></a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <span class="material-symbols-outlined" style="font-size: 2rem; margin-bottom: 10px; color: var(--text-muted);">calendar_today</span>
+                        <div>No members expiring in the next 7 days.</div>
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
