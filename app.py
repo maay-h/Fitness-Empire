@@ -279,17 +279,18 @@ def add_member():
         conn.commit()
         conn.close()
 
+        whatsapp_url = None
         if status == 'active' and phone:
-        if status == 'active' and phone:
-            send_welcome_message(
+            _, wa_url = send_welcome_message(
                 phone=phone, name=name, plan=plan,
                 joining_date=joining_date, expiry_date=expiry_date,
                 return_url=True
             )
-            flash('Member added successfully!', 'success')
-        else:
-            flash('Member added successfully!', 'success')
+            whatsapp_url = wa_url
 
+        flash('Member added successfully!', 'success')
+        if whatsapp_url:
+            return redirect(url_for('members', wa_url=whatsapp_url))
         return redirect(url_for('members'))
 
     return render_template('add_member.html')

@@ -108,5 +108,15 @@ function applyFilters() {
 document.getElementById('searchInput').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') applyFilters();
 });
+(function() {
+    const params = new URLSearchParams(window.location.search);
+    const waUrl = params.get('wa_url');
+    if (waUrl) {
+        window.open(waUrl, '_blank');
+        params.delete('wa_url');
+        const newQs = params.toString();
+        window.history.replaceState({}, '', '{{ url_for("members") }}' + (newQs ? '?' + newQs : ''));
+    }
+})();
 </script>
 {% endblock %}
