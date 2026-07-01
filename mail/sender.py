@@ -146,7 +146,7 @@ def _send_email(to_email, subject, html_body):
     msg.attach(MIMEText(html_body, 'html', 'utf-8'))
 
     try:
-        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
         server.starttls()
         server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
         server.send_message(msg)
