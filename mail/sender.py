@@ -18,15 +18,18 @@ GYM_YEAR = os.getenv('GYM_YEAR', str(__import__('datetime').datetime.now().year)
 
 def load_config():
     global MAIL_AVAILABLE, GMAIL_USER, GMAIL_APP_PASSWORD
-    try:
-        with open(CONFIG_PATH, 'r') as f:
-            cfg = json.load(f)
-        gmail = cfg.get('gmail', {})
-        GMAIL_USER = gmail.get('email', '')
-        GMAIL_APP_PASSWORD = gmail.get('app_password', '')
-        MAIL_AVAILABLE = bool(GMAIL_USER and GMAIL_APP_PASSWORD)
-    except:
-        MAIL_AVAILABLE = False
+    GMAIL_USER = os.environ.get('GMAIL_EMAIL', '')
+    GMAIL_APP_PASSWORD = os.environ.get('GMAIL_APP_PASSWORD', '')
+    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
+        try:
+            with open(CONFIG_PATH, 'r') as f:
+                cfg = json.load(f)
+            gmail = cfg.get('gmail', {})
+            GMAIL_USER = gmail.get('email', '') or GMAIL_USER
+            GMAIL_APP_PASSWORD = gmail.get('app_password', '') or GMAIL_APP_PASSWORD
+        except:
+            pass
+    MAIL_AVAILABLE = bool(GMAIL_USER and GMAIL_APP_PASSWORD)
 
 
 def _base_template(title, body):
