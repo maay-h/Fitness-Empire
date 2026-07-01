@@ -1,31 +1,35 @@
+import smtplib
 import json
 import os
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Email, To, Content, HtmlContent
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.json')
 
 MAIL_AVAILABLE = False
-SENDGRID_API_KEY = ''
-
-
-def load_config():
-    global MAIL_AVAILABLE, SENDGRID_API_KEY
-    SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', '')
-    if not SENDGRID_API_KEY:
-        try:
-            with open(CONFIG_PATH, 'r') as f:
-                cfg = json.load(f)
-            SENDGRID_API_KEY = cfg.get('sendgrid', {}).get('api_key', '') or SENDGRID_API_KEY
-        except:
-            pass
-    MAIL_AVAILABLE = bool(SENDGRID_API_KEY)
-
+GMAIL_USER = ''
+GMAIL_APP_PASSWORD = ''
 
 LOGO_URL = "https://raw.githubusercontent.com/BhuvanR10/fitness/refs/heads/main/2023-12-23.png"
 GYM_ADDRESS = "F-27/1C, 16th Main, opp. Kalyani Motors, beside NIE College, Vidyaranyapura, Mysuru, Visveshwara Nagar, Karnataka 570008"
 GYM_PHONE = "078290 73184"
 GYM_YEAR = os.getenv('GYM_YEAR', str(__import__('datetime').datetime.now().year))
+
+
+def load_config():
+    global MAIL_AVAILABLE, GMAIL_USER, GMAIL_APP_PASSWORD
+    GMAIL_USER = os.environ.get('GMAIL_EMAIL', '')
+    GMAIL_APP_PASSWORD = os.environ.get('GMAIL_APP_PASSWORD', '')
+    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
+        try:
+            with open(CONFIG_PATH, 'r') as f:
+                cfg = json.load(f)
+            gmail = cfg.get('gmail', {})
+            GMAIL_USER = gmail.get('email', '') or GMAIL_USER
+            GMAIL_APP_PASSWORD = gmail.get('app_password', '') or GMAIL_APP_PASSWORD
+        except:
+            pass
+    MAIL_AVAILABLE = bool(GMAIL_USER and GMAIL_APP_PASSWORD)
 
 
 def _base_template(title, body):
@@ -130,25 +134,24 @@ def _expiry_body(name, days_left, end_date):
 
 
 def _send_email(to_email, subject, html_body):
-    global MAIL_AVAILABLE, SENDGRID_API_KEY
     if not MAIL_AVAILABLE:
         load_config()
     if not MAIL_AVAILABLE:
-        return False, "SendGrid not configured. Set SENDGRID_API_KEY environment variable."
+        return False, "Gmail not configured. Create config.json with gmail.email and gmail.app_password"
 
-    message = Mail(
-        from_email=Email(os.environ.get('FROM_EMAIL', 'noreply@fitnessempiremysuru.in')),
-        to_emails=To(to_email),
-        subject=subject,
-        html_content=HtmlContent(html_body)
-    )
+    msg = MIMEMultipart('alternative')
+    msg['From'] = GMAIL_USER
+    msg['To'] = to_email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(html_body, 'html', 'utf-8'))
 
     try:
-        sg = SendGridAPIClient(SENDGRID_API_KEY)
-        response = sg.send(message)
-        if response.status_code in (200, 201, 202):
-            return True, "Email sent successfully"
-        return False, f"SendGrid error: {response.status_code}"
+        server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
+        server.starttls()
+        server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+        return True, "Email sent successfully"
     except Exception as e:
         return False, str(e)
 
