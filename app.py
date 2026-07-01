@@ -771,12 +771,15 @@ def admin_sales_data():
 
     members_data = []
     for r in pay_rows:
+        paid = r['paid_date']
+        if hasattr(paid, 'strftime'):
+            paid = paid.strftime('%Y-%m-%d')
         members_data.append({
             'id': r['id'],
             'name': r['name'],
             'plan': r['plan'],
             'amount_paid': r['amount_paid'] or 0,
-            'joining_date': r['paid_date'] or ''
+            'joining_date': paid or ''
         })
 
     return jsonify({'total_paid': total_paid, 'members': members_data, 'count': len(members_data)})
