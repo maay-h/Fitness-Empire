@@ -8,7 +8,6 @@ from datetime import datetime, timedelta, date
 from database import get_db, init_db
 from werkzeug.security import generate_password_hash, check_password_hash
 from whatsapp.sender import send_welcome_message, send_expiry_reminder, send_balance_reminder
-from mail.sender import send_welcome_email, send_expiry_reminder_email, send_balance_reminder_email, load_config as load_mail_config
 
 load_mail_config()
 
@@ -281,17 +280,13 @@ def add_member():
         conn.close()
 
         if status == 'active' and phone:
-            msgs = []
+        if status == 'active' and phone:
             send_welcome_message(
                 phone=phone, name=name, plan=plan,
                 joining_date=joining_date, expiry_date=expiry_date,
                 return_url=True
             )
-            msgs.append('WhatsApp link generated')
-            if email:
-                mail_ok, mail_msg = send_welcome_email(email, name, plan, joining_date, expiry_date)
-                msgs.append(f'Email: {mail_msg}')
-            flash('Member added successfully! ' + ' | '.join(msgs), 'success')
+            flash('Member added successfully!', 'success')
         else:
             flash('Member added successfully!', 'success')
 
@@ -550,25 +545,6 @@ def send_welcome(member_id):
     )
     return jsonify({'url': url})
 
-@app.route('/send-welcome-email/<int:member_id>', methods=['POST'])
-def send_welcome_email_route(member_id):
-    conn = get_db()
-    member = conn.execute('SELECT * FROM members WHERE id = %s', (member_id,)).fetchone()
-    conn.close()
-    if not member:
-        flash('Member not found', 'danger')
-        return redirect(url_for('members'))
-    if not member['email']:
-        flash('No email address for this member', 'warning')
-        return redirect(url_for('member_detail', member_id=member_id))
-
-    ok, msg = send_welcome_email(
-        member['email'], member['name'], member['plan'],
-        member['joining_date'], member['expiry_date']
-    )
-    flash(f'Email welcome sent to {member["name"]}: {msg}', 'success' if ok else 'warning')
-    return redirect(url_for('member_detail', member_id=member_id))
-
 @app.route('/send-reminder/<int:member_id>', methods=['POST'])
 def send_reminder(member_id):
     conn = get_db()
@@ -588,29 +564,6 @@ def send_reminder(member_id):
     )
     return jsonify({'url': url})
 
-@app.route('/send-reminder-email/<int:member_id>', methods=['POST'])
-def send_reminder_email_route(member_id):
-    conn = get_db()
-    member = conn.execute('SELECT * FROM members WHERE id = %s', (member_id,)).fetchone()
-    conn.close()
-    if not member:
-        flash('Member not found', 'danger')
-        return redirect(url_for('members'))
-    if not member['email']:
-        flash('No email address for this member', 'warning')
-        return redirect(url_for('member_detail', member_id=member_id))
-    if not member['expiry_date']:
-        flash('No expiry date for this member', 'warning')
-        return redirect(url_for('member_detail', member_id=member_id))
-
-    days_left = ((datetime.strptime(member['expiry_date'], '%Y-%m-%d').date() if isinstance(member['expiry_date'], str) else member['expiry_date']) - date.today()).days
-    ok, msg = send_expiry_reminder_email(
-        member['email'], member['name'], member['plan'],
-        member['expiry_date'], days_left
-    )
-    flash(f'Email reminder sent to {member["name"]}: {msg}', 'success' if ok else 'warning')
-    return redirect(url_for('member_detail', member_id=member_id))
-
 @app.route('/send-balance-reminder/<int:member_id>', methods=['POST'])
 def send_balance_reminder_route(member_id):
     conn = get_db()
@@ -626,59 +579,6 @@ def send_balance_reminder_route(member_id):
         return_url=True
     )
     return jsonify({'url': url})
-
-@app.route('/send-balance-reminder-email/<int:member_id>', methods=['POST'])
-def send_balance_reminder_email_route(member_id):
-    conn = get_db()
-    member = conn.execute('SELECT * FROM members WHERE id = %s', (member_id,)).fetchone()
-    conn.close()
-    if not member:
-        flash('Member not found', 'danger')
-        return redirect(url_for('members'))
-    if not member['email']:
-        flash('No email address for this member', 'warning')
-        return redirect(url_for('member_detail', member_id=member_id))
-    if not member['balance_amount'] or member['balance_amount'] <= 0:
-        flash('No pending balance for this member', 'warning')
-        return redirect(url_for('member_detail', member_id=member_id))
-    ok, msg = send_balance_reminder_email(
-        member['email'], member['name'],
-        member['balance_amount'] or 0,
-        member['balance_due_date'] or 'N/A'
-    )
-    flash(f'Balance reminder email sent to {member["name"]}: {msg}', 'success' if ok else 'warning')
-    return redirect(url_for('member_detail', member_id=member_id))
-
-@app.route('/send-all-email-reminders', methods=['POST'])
-def send_all_email_reminders():
-    conn = get_db()
-    members_list = conn.execute(
-        "SELECT * FROM members WHERE expiry_date BETWEEN CURRENT_DATE - 1 AND CURRENT_DATE + 7 AND status='active' ORDER BY expiry_date ASC"
-    ).fetchall()
-    conn.close()
-
-    sent = 0
-    failed = 0
-    last_error = ''
-    for member in members_list:
-        if not member['email'] or not member['expiry_date']:
-            continue
-        days_left = ((datetime.strptime(member['expiry_date'], '%Y-%m-%d').date() if isinstance(member['expiry_date'], str) else member['expiry_date']) - date.today()).days
-        ok, err = send_expiry_reminder_email(
-            member['email'], member['name'], member['plan'],
-            member['expiry_date'], days_left
-        )
-        if ok:
-            sent += 1
-        else:
-            failed += 1
-            last_error = err
-
-    if sent:
-        flash(f'Email reminders sent to {sent} member(s)', 'success')
-    if failed:
-        flash(f'Email failed for {failed} member(s). Last error: {last_error}', 'danger')
-    return redirect(url_for('expiring_members'))
 
 @app.route('/admin/verify', methods=['POST'])
 def verify_admin():

@@ -3,9 +3,6 @@
 <div class="top-bar">
     <h1><span class="material-symbols-outlined" style="vertical-align: middle;">schedule</span> Members Expiring Soon</h1>
     <div>
-        <form method="POST" action="{{ url_for('send_all_email_reminders') }}" style="display: inline;">
-            <button type="submit" class="btn btn-warning"><span class="material-symbols-outlined">mail</span> Remind All via Email</button>
-        </form>
         <a href="{{ url_for('members') }}" class="btn btn-secondary"><span class="material-symbols-outlined">arrow_back</span> All Members</a>
     </div>
 </div>
