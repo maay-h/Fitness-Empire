@@ -282,16 +282,16 @@ def add_member():
 
         if status == 'active' and phone:
             msgs = []
-            wa_ok, wa_msg = send_welcome_message(
+            send_welcome_message(
                 phone=phone, name=name, plan=plan,
                 joining_date=joining_date, expiry_date=expiry_date,
                 return_url=True
             )
-            msgs.append(f'WhatsApp: {wa_msg}')
+            msgs.append('WhatsApp link generated')
             if email:
                 mail_ok, mail_msg = send_welcome_email(email, name, plan, joining_date, expiry_date)
                 msgs.append(f'Email: {mail_msg}')
-            flash('Member added successfully! ' + ' | '.join(msgs), 'success' if wa_ok else 'warning')
+            flash('Member added successfully! ' + ' | '.join(msgs), 'success')
         else:
             flash('Member added successfully!', 'success')
 
