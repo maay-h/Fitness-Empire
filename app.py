@@ -9,8 +9,6 @@ from database import get_db, init_db
 from werkzeug.security import generate_password_hash, check_password_hash
 from whatsapp.sender import send_welcome_message, send_expiry_reminder, send_balance_reminder
 
-load_mail_config()
-
 SITE_PASSWORD = os.getenv('SITE_PASSWORD', 'gym@123')
 
 app = Flask(__name__)
