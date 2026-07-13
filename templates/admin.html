@@ -106,8 +106,12 @@
 
 {% if trainer_data %}
 <div class="card" style="margin-top:20px;">
-    <div class="card-header">
-        <h3><span class="material-symbols-outlined">fitness_center</span> Trainer Revenue Contribution - {{ year }}</h3>
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border-color);">
+        <h3 style="margin:0;"><span class="material-symbols-outlined">fitness_center</span> Trainer Revenue Contribution - {{ year }}</h3>
+        <div style="display:flex;gap:8px;">
+            <a href="?year={{ year-1 }}" class="btn btn-sm btn-outline"><span class="material-symbols-outlined">chevron_left</span></a>
+            <a href="?year={{ year+1 }}" class="btn btn-sm btn-outline"><span class="material-symbols-outlined">chevron_right</span></a>
+        </div>
     </div>
     <div style="padding:16px 20px;">
         <table>
