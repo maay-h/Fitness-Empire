@@ -232,12 +232,25 @@ def add_member():
         balance_due_date = balance_due_date or None
 
         if not name or not plan:
+            conn = get_db()
+            trainers = [r['trainer'] for r in conn.execute("SELECT DISTINCT trainer FROM members WHERE trainer IS NOT NULL AND trainer != '' ORDER BY trainer").fetchall()]
+            conn.close()
             flash('Name and Plan are required', 'danger')
-            return render_template('add_member.html')
+            return render_template('add_member.html', trainers=trainers)
 
-        if joining_date and expiry_date and expiry_date < joining_date:
+        if not joining_date or not expiry_date:
+            conn = get_db()
+            trainers = [r['trainer'] for r in conn.execute("SELECT DISTINCT trainer FROM members WHERE trainer IS NOT NULL AND trainer != '' ORDER BY trainer").fetchall()]
+            conn.close()
+            flash('Joining Date and Expiry Date are required', 'danger')
+            return render_template('add_member.html', trainers=trainers)
+
+        if expiry_date < joining_date:
+            conn = get_db()
+            trainers = [r['trainer'] for r in conn.execute("SELECT DISTINCT trainer FROM members WHERE trainer IS NOT NULL AND trainer != '' ORDER BY trainer").fetchall()]
+            conn.close()
             flash('Expiry date cannot be before joining date', 'danger')
-            return render_template('add_member.html')
+            return render_template('add_member.html', trainers=trainers)
 
         if not has_balance:
             amount_paid = price
@@ -291,7 +304,10 @@ def add_member():
             return redirect(url_for('members', wa_url=whatsapp_url))
         return redirect(url_for('members'))
 
-    return render_template('add_member.html')
+    conn = get_db()
+    trainers = [r['trainer'] for r in conn.execute("SELECT DISTINCT trainer FROM members WHERE trainer IS NOT NULL AND trainer != '' ORDER BY trainer").fetchall()]
+    conn.close()
+    return render_template('add_member.html', trainers=trainers)
 
 @app.route('/members/edit/<int:member_id>', methods=['GET', 'POST'])
 def edit_member(member_id):
@@ -641,9 +657,17 @@ def admin():
         total_paid = pay['total'] or 0
         monthly_data.append({'month': m, 'month_name': month_names[m-1], 'count': cnt, 'total': total_paid})
         grand_total += total_paid
+    trainer_data = conn.execute(
+        '''SELECT m.trainer, COALESCE(SUM(p.amount), 0) as total
+           FROM payments p JOIN members m ON p.member_id = m.id
+           WHERE TO_CHAR(p.payment_date::DATE, 'YYYY') = %s AND m.trainer IS NOT NULL AND m.trainer != ''
+           GROUP BY m.trainer ORDER BY total DESC''',
+        (year,)
+    ).fetchall()
     conn.close()
     return render_template('admin.html', admin_verified=session.get('admin_verified', False),
-                           monthly_data=monthly_data, year=year_val, grand_total=grand_total)
+                           monthly_data=monthly_data, year=year_val, grand_total=grand_total,
+                           trainer_data=trainer_data)
 
 @app.route('/admin/sales-data')
 def admin_sales_data():

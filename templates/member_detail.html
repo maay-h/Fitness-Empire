@@ -191,10 +191,31 @@
     {% if member['balance_amount'] and member['balance_amount'] > 0 %}
     <button onclick="sendWA('{{ url_for('send_balance_reminder_route', member_id=member['id']) }}')" class="btn" style="background:#2563eb;color:#fff;"><span class="material-symbols-outlined">chat</span> Balance Reminder via WhatsApp</button>
     {% endif %}
-    <form method="POST" action="{{ url_for('delete_member', member_id=member['id']) }}" onsubmit="return confirm('Are you sure you want to delete this member?');" style="margin-left: auto;">
+    <form method="POST" action="{{ url_for('delete_member', member_id=member['id']) }}" onsubmit="return confirmDelete(event)" style="margin-left: auto;">
         <button type="submit" class="btn btn-danger"><span class="material-symbols-outlined">delete</span> Delete Member</button>
     </form>
 </div>
+<script>
+function confirmDelete(event) {
+    event.preventDefault();
+    const pwd = prompt('Enter admin password to delete this member:');
+    if (!pwd) return false;
+    fetch('{{ url_for("verify_admin") }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'password=' + encodeURIComponent(pwd)
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            if (confirm('Are you sure you want to delete this member?')) {
+                event.target.submit();
+            }
+        } else {
+            alert('Incorrect admin password. Deletion cancelled.');
+        }
+    });
+    return false;
+}
+</script>
 <script>
 function sendWA(url) {
     fetch(url, { method: 'POST' })

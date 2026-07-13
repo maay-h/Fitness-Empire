@@ -104,6 +104,34 @@
     </table>
 </div>
 
+{% if trainer_data %}
+<div class="card" style="margin-top:20px;">
+    <div class="card-header">
+        <h3><span class="material-symbols-outlined">fitness_center</span> Trainer Revenue Contribution - {{ year }}</h3>
+    </div>
+    <div style="padding:16px 20px;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Trainer</th>
+                    <th>Total Revenue</th>
+                    <th style="text-align:right;">% of Year</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in trainer_data %}
+                <tr>
+                    <td><strong>{{ t['trainer'] }}</strong></td>
+                    <td>₹{{ '%.2f'|format(t['total']) }}</td>
+                    <td style="text-align:right;">{% if grand_total > 0 %}{{ '%.1f'|format(t['total'] / grand_total * 100) }}%{% else %}0%{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const now = new Date();

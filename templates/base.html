@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif:wght@500;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="icon" href="{{ url_for('static', filename='images/Fitness Empire.ico') }}">
+    <link rel="icon" href="{{ url_for('static', filename='images/FELogo.jpeg') }}" type="image/jpeg">
 </head>
 <body>
     <div class="wrapper">
@@ -73,6 +73,14 @@
                     {% endif %}
                 {% endwith %}
             </div>
+            <script>
+            (function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(function(a) {
+                    setTimeout(function() { a.style.opacity = '0'; a.style.transition = 'opacity 0.5s'; setTimeout(function() { a.remove(); }, 500); }, 7000);
+                });
+            })();
+            </script>
             {% block content %}{% endblock %}
         </main>
     </div>
