@@ -452,6 +452,11 @@ def renew_member(member_id):
 
 @app.route('/members/delete/<int:member_id>', methods=['POST'])
 def delete_member(member_id):
+    admin_pwd = request.form.get('admin_password', '')
+    stored_hash = load_admin_password_hash()
+    if not stored_hash or not check_password_hash(stored_hash, admin_pwd):
+        flash('Unauthorized: Incorrect admin password.', 'error')
+        return redirect(url_for('member_detail', member_id=member_id))
     conn = get_db()
     conn.execute('DELETE FROM members WHERE id = %s', (member_id,))
     conn.commit()

@@ -192,6 +192,7 @@
     <button onclick="sendWA('{{ url_for('send_balance_reminder_route', member_id=member['id']) }}')" class="btn" style="background:#2563eb;color:#fff;"><span class="material-symbols-outlined">chat</span> Balance Reminder via WhatsApp</button>
     {% endif %}
     <form method="POST" action="{{ url_for('delete_member', member_id=member['id']) }}" onsubmit="return confirmDelete(event)" style="margin-left: auto;">
+        <input type="hidden" name="admin_password" id="admin_password_input">
         <button type="submit" class="btn btn-danger"><span class="material-symbols-outlined">delete</span> Delete Member</button>
     </form>
 </div>
@@ -200,6 +201,7 @@ function confirmDelete(event) {
     event.preventDefault();
     const pwd = prompt('Enter admin password to delete this member:');
     if (!pwd) return false;
+    document.getElementById('admin_password_input').value = pwd;
     fetch('{{ url_for("verify_admin") }}', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
