@@ -118,6 +118,12 @@ def init_db():
         "WHERE p.id IS NULL AND m.amount_paid > 0"
     )
     cursor.execute('''
+        CREATE TABLE IF NOT EXISTS trainers (
+            name TEXT PRIMARY KEY
+        )
+    ''')
+    cursor.execute("INSERT INTO trainers (name) SELECT DISTINCT trainer FROM members WHERE trainer IS NOT NULL AND trainer != '' ON CONFLICT DO NOTHING")
+    cursor.execute('''
         CREATE TABLE IF NOT EXISTS settings (
             key TEXT PRIMARY KEY,
             value TEXT

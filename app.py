@@ -173,7 +173,7 @@ def members():
     query += ' ORDER BY id DESC'
     conn = get_db()
     members_list = conn.execute(query, params).fetchall()
-    trainers = conn.execute("SELECT DISTINCT trainer FROM members WHERE trainer IS NOT NULL AND trainer != '' ORDER BY trainer").fetchall()
+    trainers = conn.execute("SELECT name FROM trainers ORDER BY name").fetchall()
     conn.close()
     return render_template('members.html', members=members_list, selected_status=status_filter, selected_plan=plan_filter, selected_trainer=trainer_filter, search_query=search_query, trainers=trainers)
 
@@ -238,21 +238,21 @@ def add_member():
 
         if not name or not plan:
             conn = get_db()
-            trainers = [r['trainer'] for r in conn.execute("SELECT DISTINCT trainer FROM members WHERE trainer IS NOT NULL AND trainer != '' ORDER BY trainer").fetchall()]
+            trainers = [r['name'] for r in conn.execute("SELECT name FROM trainers ORDER BY name").fetchall()]
             conn.close()
             flash('Name and Plan are required', 'danger')
             return render_template('add_member.html', trainers=trainers)
 
         if not joining_date or not expiry_date:
             conn = get_db()
-            trainers = [r['trainer'] for r in conn.execute("SELECT DISTINCT trainer FROM members WHERE trainer IS NOT NULL AND trainer != '' ORDER BY trainer").fetchall()]
+            trainers = [r['name'] for r in conn.execute("SELECT name FROM trainers ORDER BY name").fetchall()]
             conn.close()
             flash('Joining Date and Expiry Date are required', 'danger')
             return render_template('add_member.html', trainers=trainers)
 
         if expiry_date < joining_date:
             conn = get_db()
-            trainers = [r['trainer'] for r in conn.execute("SELECT DISTINCT trainer FROM members WHERE trainer IS NOT NULL AND trainer != '' ORDER BY trainer").fetchall()]
+            trainers = [r['name'] for r in conn.execute("SELECT name FROM trainers ORDER BY name").fetchall()]
             conn.close()
             flash('Expiry date cannot be before joining date', 'danger')
             return render_template('add_member.html', trainers=trainers)
@@ -292,6 +292,8 @@ def add_member():
                 'INSERT INTO payments (member_id, amount, payment_date, payment_mode, plan) VALUES (%s, %s, %s, %s, %s)',
                 (member_id, amount_paid, paid_date or joining_date or str(date.today()), payment_mode, plan)
             )
+        if trainer:
+            conn.execute('INSERT INTO trainers (name) VALUES (%s) ON CONFLICT DO NOTHING', (trainer,))
         conn.commit()
         conn.close()
 
@@ -310,7 +312,7 @@ def add_member():
         return redirect(url_for('members'))
 
     conn = get_db()
-    trainers = [r['trainer'] for r in conn.execute("SELECT DISTINCT trainer FROM members WHERE trainer IS NOT NULL AND trainer != '' ORDER BY trainer").fetchall()]
+    trainers = [r['name'] for r in conn.execute("SELECT name FROM trainers ORDER BY name").fetchall()]
     conn.close()
     return render_template('add_member.html', trainers=trainers)
 
@@ -386,6 +388,8 @@ def edit_member(member_id):
                 'INSERT INTO payments (member_id, amount, payment_date, payment_mode, plan) VALUES (%s, %s, %s, %s, %s)',
                 (member_id, amount_paid, pay_date, payment_mode, plan)
             )
+        if trainer:
+            conn.execute('INSERT INTO trainers (name) VALUES (%s) ON CONFLICT DO NOTHING', (trainer,))
         conn.commit()
         conn.close()
         flash('Member updated successfully!', 'success')
