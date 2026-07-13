@@ -53,6 +53,27 @@ Fitness Empire"""
         return False, str(e)
 
 
+def send_expired_message(phone, name, plan, expiry_date, return_url=False):
+    message = f"""Membership Expired - Renew Now!
+
+Hi {name},
+
+Your {plan} membership at Fitness Empire has expired on {expiry_date}.
+
+Don't let your fitness journey stop! Visit us to renew your membership and continue your transformation.
+
+Fitness Empire"""
+
+    url = _build_url(phone, message)
+    if return_url:
+        return True, url
+    try:
+        webbrowser.open(url)
+        return True, "WhatsApp chat opened. Press Enter to send."
+    except Exception as e:
+        return False, str(e)
+
+
 def send_expiry_reminder(phone, name, plan, expiry_date, days_remaining, return_url=False):
     if days_remaining > 0:
         message = f"""Membership Expiry Reminder

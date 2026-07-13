@@ -7,7 +7,7 @@ import io
 from datetime import datetime, timedelta, date
 from database import get_db, init_db
 from werkzeug.security import generate_password_hash, check_password_hash
-from whatsapp.sender import send_welcome_message, send_expiry_reminder, send_balance_reminder
+from whatsapp.sender import send_welcome_message, send_expiry_reminder, send_balance_reminder, send_expired_message
 
 SITE_PASSWORD = os.getenv('SITE_PASSWORD', 'gym@123')
 
@@ -150,6 +150,7 @@ def index():
 def members():
     status_filter = request.args.get('status', '')
     plan_filter = request.args.get('plan', '')
+    trainer_filter = request.args.get('trainer', '')
     search_query = request.args.get('q', '').strip()
     query = 'SELECT * FROM members WHERE 1=1'
     params = []
@@ -166,11 +167,15 @@ def members():
     if plan_filter:
         query += ' AND plan=%s'
         params.append(plan_filter)
+    if trainer_filter:
+        query += ' AND trainer=%s'
+        params.append(trainer_filter)
     query += ' ORDER BY id DESC'
     conn = get_db()
     members_list = conn.execute(query, params).fetchall()
+    trainers = conn.execute("SELECT DISTINCT trainer FROM members WHERE trainer IS NOT NULL AND trainer != '' ORDER BY trainer").fetchall()
     conn.close()
-    return render_template('members.html', members=members_list, selected_status=status_filter, selected_plan=plan_filter, search_query=search_query)
+    return render_template('members.html', members=members_list, selected_status=status_filter, selected_plan=plan_filter, selected_trainer=trainer_filter, search_query=search_query, trainers=trainers)
 
 @app.route('/member/<int:member_id>')
 def member_detail(member_id):
@@ -596,6 +601,22 @@ def send_balance_reminder_route(member_id):
         name=member['name'],
         amount=member['balance_amount'] or 0,
         due_date=member['balance_due_date'] or 'N/A',
+        return_url=True
+    )
+    return jsonify({'url': url})
+
+@app.route('/send-expired/<int:member_id>', methods=['POST'])
+def send_expired_route(member_id):
+    conn = get_db()
+    member = conn.execute('SELECT * FROM members WHERE id = %s', (member_id,)).fetchone()
+    conn.close()
+    if not member:
+        return jsonify({'error': 'Member not found'}), 404
+    _, url = send_expired_message(
+        phone=member['phone'],
+        name=member['name'],
+        plan=member['plan'],
+        expiry_date=member['expiry_date'],
         return_url=True
     )
     return jsonify({'url': url})

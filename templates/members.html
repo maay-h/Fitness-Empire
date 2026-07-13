@@ -26,13 +26,19 @@
             <option value="6 Months" {{ 'selected' if selected_plan == '6 Months' else '' }}>6 Months</option>
             <option value="1 Year" {{ 'selected' if selected_plan == '1 Year' else '' }}>1 Year</option>
         </select>
+        <select id="trainerFilter" class="form-control" onchange="applyFilters()">
+            <option value="">All Trainers</option>
+            {% for t in trainers %}
+            <option value="{{ t['trainer'] }}" {{ 'selected' if selected_trainer == t['trainer'] else '' }}>{{ t['trainer'] }}</option>
+            {% endfor %}
+        </select>
     </div>
 </div>
 
 <div class="table-container">
     <div class="table-header">
         <h3>Gym Members ({{ members|length }})</h3>
-        {% if selected_status or selected_plan %}
+        {% if selected_status or selected_plan or selected_trainer %}
         <a href="{{ url_for('members') }}" class="btn btn-sm btn-outline"><span class="material-symbols-outlined">close</span> Clear Filters</a>
         {% endif %}
     </div>
@@ -119,11 +125,13 @@ function confirmDelete(event) {
 function applyFilters() {
     const status = document.getElementById('statusFilter').value;
     const plan = document.getElementById('planFilter').value;
+    const trainer = document.getElementById('trainerFilter').value;
     const search = document.getElementById('searchInput').value.trim();
     const params = new URLSearchParams();
     if (search) params.set('q', search);
     if (status) params.set('status', status);
     if (plan) params.set('plan', plan);
+    if (trainer) params.set('trainer', trainer);
     const qs = params.toString();
     window.location.href = '{{ url_for("members") }}' + (qs ? '?' + qs : '');
 }

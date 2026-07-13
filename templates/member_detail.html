@@ -187,6 +187,8 @@
     <button onclick="sendWA('{{ url_for("send_welcome", member_id=member['id']) }}')" class="btn btn-success"><span class="material-symbols-outlined">chat</span> Welcome via WhatsApp</button>
     {% if member['status'] == 'active' %}
     <button onclick="sendWA('{{ url_for("send_reminder", member_id=member['id']) }}')" class="btn btn-warning"><span class="material-symbols-outlined">chat</span> Reminder via WhatsApp</button>
+    {% else %}
+    <button onclick="sendWA('{{ url_for("send_expired_route", member_id=member['id']) }}')" class="btn btn-outline"><span class="material-symbols-outlined">chat</span> Expired Message via WhatsApp</button>
     {% endif %}
     {% if member['balance_amount'] and member['balance_amount'] > 0 %}
     <button onclick="sendWA('{{ url_for('send_balance_reminder_route', member_id=member['id']) }}')" class="btn" style="background:#2563eb;color:#fff;"><span class="material-symbols-outlined">chat</span> Balance Reminder via WhatsApp</button>
