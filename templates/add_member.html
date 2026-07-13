@@ -39,7 +39,7 @@
         <div class="form-row">
             <div class="form-group">
                 <label><span class="material-symbols-outlined">calendar_today</span> Joining Date *</label>
-                <input type="date" id="joining_date" name="joining_date" class="form-control" required onchange="calcExpiry()">
+                <input type="date" id="joining_date" name="joining_date" class="form-control" required>
             </div>
             <div class="form-group">
                 <label><span class="material-symbols-outlined">event_busy</span> Membership Expiry Date *</label>
@@ -49,7 +49,7 @@
         <div class="form-row">
             <div class="form-group">
                 <label><span class="material-symbols-outlined">add</span> Extend Days (optional)</label>
-                <input type="number" id="extend_days" name="extend_days" class="form-control" placeholder="Extra days to add" min="0" step="1" onchange="calcExpiry()">
+                <input type="number" id="extend_days" name="extend_days" class="form-control" placeholder="Extra days to add" min="0" step="1">
             </div>
             <div class="form-group">
                 <label><span class="material-symbols-outlined">fitness_center</span> Trainer</label>
@@ -138,20 +138,26 @@ function togglePaymentMode() {
     }
 }
 
-const planDays = {'1 Month': 30, '3 Months': 90, '6 Months': 180, '1 Year': 365};
-
 function calcExpiry() {
     const plan = document.getElementById('plan').value;
     const joinDate = document.getElementById('joining_date').value;
     const extend = parseInt(document.getElementById('extend_days').value) || 0;
+    var planDays = {'1 Month': 30, '3 Months': 90, '6 Months': 180, '1 Year': 365};
     if (plan && planDays[plan] && joinDate) {
-        const d = new Date(joinDate);
+        var d = new Date(joinDate + 'T00:00:00');
         d.setDate(d.getDate() + planDays[plan] + extend);
-        document.getElementById('expiry_date').value = d.toISOString().split('T')[0];
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, '0');
+        var day = String(d.getDate()).padStart(2, '0');
+        document.getElementById('expiry_date').value = y + '-' + m + '-' + day;
     }
 }
 
-document.getElementById('plan').addEventListener('change', calcExpiry);
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('plan').addEventListener('change', calcExpiry);
+    document.getElementById('joining_date').addEventListener('change', calcExpiry);
+    document.getElementById('extend_days').addEventListener('input', calcExpiry);
+});
     const mode = document.getElementById('payment_mode').value;
     document.getElementById('single_amount_group').style.display = mode === 'Both' ? 'none' : '';
     document.getElementById('both_amounts_group').style.display = mode === 'Both' ? '' : 'none';
