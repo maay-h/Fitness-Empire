@@ -158,25 +158,5 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('joining_date').addEventListener('change', calcExpiry);
     document.getElementById('extend_days').addEventListener('input', calcExpiry);
 });
-    const mode = document.getElementById('payment_mode').value;
-    document.getElementById('single_amount_group').style.display = mode === 'Both' ? 'none' : '';
-    document.getElementById('both_amounts_group').style.display = mode === 'Both' ? '' : 'none';
-    if (mode === 'Both') {
-        document.getElementById('cash_amount').value = '';
-        document.getElementById('online_amount').value = '';
-    }
-}
-document.addEventListener('DOMContentLoaded', function() {
-    const inputs = document.querySelectorAll('form input, form select');
-    for (let i = 0; i < inputs.length; i++) {
-        inputs[i].addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const next = inputs[i + 1];
-                if (next) next.focus();
-            }
-        });
-    }
-});
 </script>
 {% endblock %}
